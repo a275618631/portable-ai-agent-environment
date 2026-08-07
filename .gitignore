@@ -1,0 +1,21 @@
+# Local editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local runtime state and generated material
+.env
+.env.*
+!.env.example
+coverage/
+dist/
+tmp/
+
+# Never version personal agent state
+credentials/
+tokens/
+secrets/
+cache/
+logs/
+*.local
