@@ -48,7 +48,7 @@ shows the classification without prescribing a restore process.
 
 ## Safety Controls
 
-- A pre-commit hook checks staged whitespace and invokes a Bash scanner.
+- A pre-commit hook runs the staged secret scanner first, then performs a suppressed staged-whitespace check.
 - The scanner reads raw staged blobs and NUL-delimited paths, not working-tree text.
 - Unsupported encodings, binary data, and disallowed C0 or DEL control bytes fail
   closed after UTF-8 validation.
