@@ -6,6 +6,13 @@ The executable reference included here is Bash-based and should not be interpret
 
 > **繁中摘要：** 本專案為一套已於 Windows 與 macOS 運作的私有 AI agent 工程環境之公開安全 Companion。它公開可重用的系統架構、安全邊界、案例研究與合成驗證範例，而不公開個人私有設定或還原實作。
 
+## Portfolio Context
+
+This project addresses a concrete engineering problem: migrating a complete AI agent environment between machines risks copying session state, credentials, and machine-local identity alongside the portable configuration. The solution establishes a categorized boundary between what is portable and what must remain local, separates agent responsibilities across distinct roles, and validates the safety controls with a targeted regression suite.
+
+The private implementation is working and cross-platform validated. This companion publishes the architecture, boundaries, and validation approach.
+
+
 ## What this demonstrates
 
 | Capability | Evidence |
