@@ -37,10 +37,11 @@ companion extracts only the generic lessons and a minimal safety guard.
 
 ## Hardening
 
-The included hook first uses Git's staged whitespace check, then invokes a small Bash
-scanner. The scanner consumes NUL-delimited changed paths, reads each raw staged blob,
-checks common credential shapes, and refuses content it cannot safely decode. This is
-defense in depth, not a claim of comprehensive secret detection.
+The included hook runs the staged secret scanner first, then performs a suppressed
+staged-whitespace check that reports only a generic failure message. The scanner
+consumes NUL-delimited changed paths, reads each raw staged blob, checks common
+credential shapes, and refuses content it cannot safely decode. This is defense in
+depth, not a claim of comprehensive secret detection.
 
 ## Targeted regression
 
@@ -58,9 +59,9 @@ human approval—not in a single script alone.
 
 ## Limitations
 
-The PowerShell runtime was not validated in this work and no PowerShell scanner is
-published here. The private synchronization repository is not public. This project did
-not rerun a full cross-machine test suite, does not claim cross-platform certification,
-and does not include CI.
+The public companion itself is not a cross-platform certification or complete runtime
+distribution; the underlying private environment has been exercised on Windows and
+macOS. A PowerShell scanner is intentionally omitted from this public reference. The
+private synchronization repository remains private and no CI workflow is included.
 
-> **繁中對照：** 可攜性不是複製整台機器，而是重建預期行為。這份公開案例只保留通用分類、工作流程與 staged-content 防護；PowerShell runtime 本次未驗證，私有同步 repo 未公開，也沒有重跑完整跨機測試。
+> **繁中對照：** 可攜性不是複製整台機器，而是重建預期行為。公開 Companion 本身並非完整跨平台 Runtime 發行包；底層私有環境已於 Windows 與 macOS 實測驗證。此公開專案不含 PowerShell 掃描器、不公開私有同步 repo，亦不含 CI。
