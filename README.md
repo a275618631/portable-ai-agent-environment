@@ -1,10 +1,21 @@
 # Portable AI Agent Engineering Environment
 
-A cross-platform portability conceptual design and reference for a safety-first AI
-agent engineering environment. The included code and regression tests run only in a
-Bash runtime; they are not a cross-platform runtime implementation.
+A public-safe companion to a working private AI agent engineering environment designed for portable use across Windows and macOS. This repository publishes the reusable architecture, safety boundaries, case study, and synthetic validation examples—not the private configuration or restore implementation.
 
-> **繁中摘要：** 這是可攜 AI agent 工程環境的公開參考實作與案例研究。它示範如何把可公開、可審查的流程與安全控制分離於個人設定、憑證、備份和機器身分之外；不是個人環境的還原包。
+The executable reference included here is Bash-based and should not be interpreted as a complete public cross-platform runtime implementation.
+
+> **繁中摘要：** 本專案為一套已於 Windows 與 macOS 運作的私有 AI agent 工程環境之公開安全 Companion。它公開可重用的系統架構、安全邊界、案例研究與合成驗證範例，而不公開個人私有設定或還原實作。
+
+## What this demonstrates
+
+| Capability | Evidence |
+| --- | --- |
+| System architecture | Portable vs. machine-local boundary |
+| AI agent governance | Planning / Research / Engineering / Delivery separation |
+| Risk management | Human approval and reversible delivery boundaries |
+| Configuration engineering | Canonical-source and categorized portability model |
+| Secure delivery | Raw staged-blob scanning and fail-closed gates |
+| Engineering pragmatism | Targeted regression based on changed paths |
 
 ## Problem
 
@@ -23,7 +34,7 @@ configuration copy → reviewed categories → portable / machine-local boundary
 
 ## Architecture
 
-This repository documents a conceptual workflow in which a human sets scope and
+This repository documents a workflow in which a human sets scope and
 approval boundaries; planning coordinates work; research validates external claims;
 engineering implements and tests; and routine delivery handles reversible handoff.
 See [the architecture reference](docs/architecture.md).

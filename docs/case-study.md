@@ -1,5 +1,16 @@
 # Case study: designing a portable AI agent engineering environment
 
+## What this demonstrates
+
+| Capability | Evidence |
+| --- | --- |
+| System architecture | Portable vs. machine-local boundary |
+| AI agent governance | Planning / Research / Engineering / Delivery separation |
+| Risk management | Human approval and reversible delivery boundaries |
+| Configuration engineering | Canonical-source and categorized portability model |
+| Secure delivery | Raw staged-blob scanning and fail-closed gates |
+| Engineering pragmatism | Targeted regression based on changed paths |
+
 ## Problem
 
 A useful agent environment includes instructions, workflows, and engineering habits,
