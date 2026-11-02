@@ -1,107 +1,53 @@
-# Portable AI Agent Engineering Environment
+# 可攜式 AI Agent 開發環境｜讓設定跨電腦移轉，不把秘密一起搬走
 
-A public-safe companion to a working private AI agent engineering environment designed for portable use across Windows and macOS. This repository publishes the reusable architecture, safety boundaries, case study, and synthetic validation examples—not the private configuration or restore implementation.
+換一台電腦繼續用 Codex、其他 AI Agent 或常用工具，看起來只要複製設定檔就好。但真正動手時會發現，工作規則、登入狀態、憑證、機器路徑和快取經常混在一起。全部複製不但容易失效，也可能把不該分享的資料帶走。
 
-The executable reference included here is Bash-based and should not be interpreted as a complete public cross-platform runtime implementation.
+這個專案將 Agent 環境拆成**可以共用的工作方法**與**必須留在個別電腦的狀態**，並提供 Git 暫存內容掃描器與回歸測試，讓跨電腦使用工具更有章法。
 
-> **繁中摘要：** 本專案為一套已於 Windows 與 macOS 運作的私有 AI agent 工程環境之公開安全 Companion。它公開可重用的系統架構、安全邊界、案例研究與合成驗證範例，而不公開個人私有設定或還原實作。
+## 這個作品做了什麼
 
-## Portfolio Context
+- **設定分類**：區分通用規則、Skills、工作流程，以及登入 Session、機器識別資訊、本機絕對路徑等不可攜內容。
+- **Agent 角色分工**：將規劃、研究、程式實作與交付責任拆開，減少多個 Agent 同時修改時的混亂。
+- **Git 提交前檢查**：以 Bash 掃描 staged Git blobs，而非只掃工作目錄，包含重新命名、二進位、編碼異常與控制字元的測試。
+- **縮小回歸範圍**：針對變更路徑執行必要檢查，不需要每次把全部工具環境重新安裝。
+- **安全的公開範例**：提供設定分類範本與合成測試案例，不需要使用真正的登入資訊。
 
-This project addresses a concrete engineering problem: migrating a complete AI agent environment between machines risks copying session state, credentials, and machine-local identity alongside the portable configuration. The solution establishes a categorized boundary between what is portable and what must remain local, separates agent responsibilities across distinct roles, and validates the safety controls with a targeted regression suite.
+[架構說明](docs/architecture.md) · [實作案例](docs/case-study.md) · [可攜設定分類範例](examples/sync-policy.example.md)
 
-The private implementation is working and cross-platform validated. This companion publishes the architecture, boundaries, and validation approach.
+## 為什麼掃描 Git 暫存內容
 
+要送出的檔案與工作目錄中的檔案不一定相同。這裡的掃描器直接檢查**即將提交的 staged blob**，搭配以 NUL 分隔的路徑處理方式，避免檔名中的空白或特殊字元造成漏判。
 
-## What this demonstrates
+遇到無法處理的編碼、二進位內容或不允許的控制字元時，採取停止提交的策略。錯誤訊息也避免直接印出敏感檔名和內容。
 
-| Capability | Evidence |
-| --- | --- |
-| System architecture | Portable vs. machine-local boundary |
-| AI agent governance | Planning / Research / Engineering / Delivery separation |
-| Risk management | Human approval and reversible delivery boundaries |
-| Configuration engineering | Canonical-source and categorized portability model |
-| Secure delivery | Raw staged-blob scanning and fail-closed gates |
-| Engineering pragmatism | Targeted regression based on changed paths |
+## 快速試用
 
-## Problem
+此公開版本的檢查工具以 **Bash + Git** 運作。請在支援 Bash 的環境中，從專案根目錄執行：
 
-Copying an entire agent environment between machines can copy machine identity along
-with useful conventions: paths, sessions, trusted-workspace state, caches, and
-credentials. Those are neither portable configuration nor appropriate public source.
+```bash
+# 執行合成測試，確認掃描器在允許與拒絕情境的行為
+bash tests/run-targeted-regression.sh
 
-## Evolution
+# 選用：讓目前這個 repo 的 Git 使用專案提供的 hooks
+git config core.hooksPath .githooks
+```
 
-The design evolved from broad configuration copying to a categorized boundary:
+測試會建立暫時性 Git 倉庫，檢查一般檔案、疑似敏感內容、Unicode、檔名處理、二進位與異常編碼等情境。完成後可以到 [回歸測試腳本](tests/run-targeted-regression.sh) 查看確切驗收條件。
+
+## 整體設計
 
 ```text
-configuration copy → reviewed categories → portable / machine-local boundary
-→ separated agent responsibilities → targeted safety regression
+確認需要共用的設定
+        ↓
+分類為「可攜」或「本機專屬」
+        ↓
+檢查即將提交的 Git 內容
+        ↓
+只交付允許公開或同步的部分
+        ↓
+在另一台電腦以當地憑證與路徑接續
 ```
 
-## Architecture
+完整的跨電腦環境曾在私人開發流程中使用及驗證；這份公開倉提供的是**可閱讀的架構、Bash 掃描器與合成測試**，不包含私人還原腳本或 Windows PowerShell 對等掃描器。兩個範圍不混為一談。
 
-This repository documents a workflow in which a human sets scope and
-approval boundaries; planning coordinates work; research validates external claims;
-engineering implements and tests; and routine delivery handles reversible handoff.
-See [the architecture reference](docs/architecture.md).
-
-## Portable Boundary
-
-Portable material is generic policy, documented workflow, synthetic tests, and a
-staged-content guard. Machine-local state remains local. Sensitive data is never a
-candidate for version control. The optional [policy example](examples/sync-policy.example.md)
-shows the classification without prescribing a restore process.
-
-## Safety Controls
-
-- A pre-commit hook runs the staged secret scanner first, then performs a suppressed staged-whitespace check.
-- The scanner reads raw staged blobs and NUL-delimited paths, not working-tree text.
-- Unsupported encodings, binary data, and disallowed C0 or DEL control bytes fail
-  closed after UTF-8 validation.
-- Failure messages use a non-recoverable staged-blob ordinal rather than a path,
-  blob ID, or content fragment.
-- Regression fixtures are generated at runtime and do not version complete
-  secret-like values.
-
-## Quick Start
-
-```bash
-git config core.hooksPath .githooks
-bash tests/run-targeted-regression.sh
-```
-
-The hook requires Bash and Git. It protects staged content; it does not replace
-credential rotation, code review, repository access controls, or host-provided secret
-scanning.
-
-## Validation
-
-Run the targeted regression suite locally:
-
-```bash
-bash tests/run-targeted-regression.sh
-```
-
-It creates temporary Git repositories to exercise clean and blocked content, Unicode,
-unsupported encodings, binary and control bytes, a large blob, verified rename
-handling, private-looking filenames with generic logs, hook whitespace behavior, and
-non-Git fail-closed behavior.
-
-## Limitations
-
-- The Bash scanner is exercised on the current runtime only; a PowerShell equivalent
-  is intentionally not included or runtime-validated here.
-- This is not a cross-platform certification or a claim that every agent runtime has
-  identical behavior on Windows and macOS.
-- The guard recognizes common secret shapes. It cannot prove that all sensitive data
-  is absent.
-- No GitHub Actions or other CI workflow is included.
-
-## Private vs Public Boundary
-
-The canonical personal environment repository is private and is not published here.
-This companion contains no personal settings, secrets, backups, machine identity,
-hostnames, absolute paths, restore scripts, export scripts, or push scripts. For the
-full rationale, read [the publication boundary](docs/publication-boundary.md) and
-[case study](docs/case-study.md).
+想看公開範圍與技術取捨，可讀 [案例研究](docs/case-study.md) 和 [公開內容說明](docs/publication-boundary.md)。
