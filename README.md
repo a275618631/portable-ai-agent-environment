@@ -1,107 +1,86 @@
-# Portable AI Agent Engineering Environment
+# 可攜式 AI Agent 開發環境｜跨 Windows 與 macOS 的設定治理
 
-A public-safe companion to a working private AI agent engineering environment designed for portable use across Windows and macOS. This repository publishes the reusable architecture, safety boundaries, case study, and synthetic validation examples—not the private configuration or restore implementation.
+[English Version](README.en.md) · [案例研究 (Case Study)](docs/case-study.md) · [公開邊界說明 (Publication Boundary)](docs/publication-boundary.md)
 
-The executable reference included here is Bash-based and should not be interpreted as a complete public cross-platform runtime implementation.
+當我們在不同的開發電腦（如公司工作站、家用 PC、macOS 筆電）之間切換時，直接把整個 AI Agent 的目錄（例如 `.codex` 或各類 agent runtime 設定）整體複製，往往會引發嚴重的資安與環境問題：
 
-> **繁中摘要：** 本專案為一套已於 Windows 與 macOS 運作的私有 AI agent 工程環境之公開安全 Companion。它公開可重用的系統架構、安全邊界、案例研究與合成驗證範例，而不公開個人私有設定或還原實作。
+* 很容易不小心把含有登入 Token、API Key、Cookie、SSH 私鑰的檔案一起同步。
+* 各平台之間寫死的絕對路徑（如 `C:\Users\...` 與 `/Users/...`）會互相覆蓋、造成環境死鎖。
+* 暫存的 Session 狀態與本機工作區快取並非可攜設定，盲目複製只會導致 Agent 行為錯亂。
 
-## Portfolio Context
+此專案建立了一套**分類明確、具備安全攔截與回歸驗證的 Agent 環境治理架構**。私有完整版於內部 Windows 與 macOS 環境日常使用；本公開版本提供核心 Bash 暫存檔敏感資料掃描器 (`scan-staged-secrets.sh`)、可攜分類模型與針對性回歸測試，個人機密憑證與內部路徑不予收錄。
 
-This project addresses a concrete engineering problem: migrating a complete AI agent environment between machines risks copying session state, credentials, and machine-local identity alongside the portable configuration. The solution establishes a categorized boundary between what is portable and what must remain local, separates agent responsibilities across distinct roles, and validates the safety controls with a targeted regression suite.
+---
 
-The private implementation is working and cross-platform validated. This companion publishes the architecture, boundaries, and validation approach.
+## 核心展示能力
 
+| 能力維度 | 實作策略與證據 |
+|---|---|
+| **設定分類治理** | 嚴格劃分「可攜設定」（Prompt, Skill 規範, 通用規則）與「機器專屬狀態」（Session, Cache, 憑證）。 |
+| **多代理職責分離** | 規劃 Planning（總控規劃）、Research（檢索調研）、Engineering（工程實作）與 Delivery（驗收交付）四角色分工。 |
+| **嚴格攔截 (Fail-Closed)** | 透過 Pre-commit Hook 攔截 Git 暫存區，直接掃描 Raw Staged Blob，防止誤將機密提交。 |
+| **針對性回歸測試** | 根據變更的路徑針對性執行安全檢查，提供快速、可重現的驗證流程。 |
 
-## What this demonstrates
+---
 
-| Capability | Evidence |
-| --- | --- |
-| System architecture | Portable vs. machine-local boundary |
-| AI agent governance | Planning / Research / Engineering / Delivery separation |
-| Risk management | Human approval and reversible delivery boundaries |
-| Configuration engineering | Canonical-source and categorized portability model |
-| Secure delivery | Raw staged-blob scanning and fail-closed gates |
-| Engineering pragmatism | Targeted regression based on changed paths |
-
-## Problem
-
-Copying an entire agent environment between machines can copy machine identity along
-with useful conventions: paths, sessions, trusted-workspace state, caches, and
-credentials. Those are neither portable configuration nor appropriate public source.
-
-## Evolution
-
-The design evolved from broad configuration copying to a categorized boundary:
+## 架構與設定分類模型
 
 ```text
-configuration copy → reviewed categories → portable / machine-local boundary
-→ separated agent responsibilities → targeted safety regression
+原始環境複製 ──> 欄位語意審查 ──> 可攜／本機專屬邊界 ──> 多代理職責分工 ──> 自動化安全掃描
 ```
 
-## Architecture
+1. **可攜設定 (Portable Configuration)**：
+   * 通用 Agent 角色定義與系統指令 (System Prompts)
+   * 共通格式規範、Skill 流程合約與說明文件
+   * 跨平台通用測試腳本與 Git 提交規範
+2. **本機專屬資料 (Machine-Local State)**：
+   * 含有具體主機身分之絕對路徑與本機暫存快取
+   * 登入 Session、瀏覽器 Cookie 與 API 金鑰
+   * 特定本機專屬硬體設定（如 COM Port、本機資料庫連線）
 
-This repository documents a workflow in which a human sets scope and
-approval boundaries; planning coordinates work; research validates external claims;
-engineering implements and tests; and routine delivery handles reversible handoff.
-See [the architecture reference](docs/architecture.md).
+詳細架構請參閱 [架構說明文件 (docs/architecture.md)](docs/architecture.md)。
 
-## Portable Boundary
+---
 
-Portable material is generic policy, documented workflow, synthetic tests, and a
-staged-content guard. Machine-local state remains local. Sensitive data is never a
-candidate for version control. The optional [policy example](examples/sync-policy.example.md)
-shows the classification without prescribing a restore process.
+## 內建安全控制：Raw Staged-Blob 掃描器
 
-## Safety Controls
+與一般的文字搜尋不同，本專案實作的 [`scripts/scan-staged-secrets.sh`](scripts/scan-staged-secrets.sh) 直接對 Git 暫存區（Index）的 Raw Blob 進行二進位與正則掃描：
 
-- A pre-commit hook runs the staged secret scanner first, then performs a suppressed staged-whitespace check.
-- The scanner reads raw staged blobs and NUL-delimited paths, not working-tree text.
-- Unsupported encodings, binary data, and disallowed C0 or DEL control bytes fail
-  closed after UTF-8 validation.
-- Failure messages use a non-recoverable staged-blob ordinal rather than a path,
-  blob ID, or content fragment.
-- Regression fixtures are generated at runtime and do not version complete
-  secret-like values.
+* **直接讀取暫存 Blob**：不依賴尚未寫入 Working Tree 的文字，防止繞過檢查。
+* **路徑與編碼校驗**：不支援的編碼、二進位檔案或控制字元直接拒絕 (Fail-Closed)。
+* **敏感 Pattern 攔截**：內建針對私鑰、Token、包含使用者名稱之絕對路徑的特徵防護。
 
-## Quick Start
+---
+
+## 快速開始與驗證指令 (Quick Start)
+
+在具備 Bash 環境的系統（如 macOS、Linux 或 Windows Git Bash）中，可直接執行內建的方針回歸驗證：
 
 ```bash
+# 執行針對性回歸測試 suite
+bash tests/run-targeted-regression.sh
+```
+
+如需掛載至本地 Git 倉庫進行自動防護：
+
+```bash
+# 設定 pre-commit hook 呼叫 staged scanner
 git config core.hooksPath .githooks
-bash tests/run-targeted-regression.sh
 ```
 
-The hook requires Bash and Git. It protects staged content; it does not replace
-credential rotation, code review, repository access controls, or host-provided secret
-scanning.
+> [!NOTE]
+> 本倉庫之可執行參考腳本以 Bash 為主，公開展示聚焦於架構設計、邊界劃分與安全防護機制。
 
-## Validation
+---
 
-Run the targeted regression suite locally:
+## 相關文件與案例
 
-```bash
-bash tests/run-targeted-regression.sh
-```
+* [完整案例研究 (docs/case-study.md)](docs/case-study.md)：從全盤複製到精細分類的演進歷程與跨平台實證。
+* [公開發布邊界 (docs/publication-boundary.md)](docs/publication-boundary.md)：本倉庫與私有環境之資安邊界合約。
+* [同步原則範例 (examples/sync-policy.example.md)](examples/sync-policy.example.md)：分類原則之 Markdown 範本。
 
-It creates temporary Git repositories to exercise clean and blocked content, Unicode,
-unsupported encodings, binary and control bytes, a large blob, verified rename
-handling, private-looking filenames with generic logs, hook whitespace behavior, and
-non-Git fail-closed behavior.
+---
 
-## Limitations
+## 授權 (License)
 
-- The Bash scanner is exercised on the current runtime only; a PowerShell equivalent
-  is intentionally not included or runtime-validated here.
-- This is not a cross-platform certification or a claim that every agent runtime has
-  identical behavior on Windows and macOS.
-- The guard recognizes common secret shapes. It cannot prove that all sensitive data
-  is absent.
-- No GitHub Actions or other CI workflow is included.
-
-## Private vs Public Boundary
-
-The canonical personal environment repository is private and is not published here.
-This companion contains no personal settings, secrets, backups, machine identity,
-hostnames, absolute paths, restore scripts, export scripts, or push scripts. For the
-full rationale, read [the publication boundary](docs/publication-boundary.md) and
-[case study](docs/case-study.md).
+本專案採用 [MIT License](LICENSE) 授權。
