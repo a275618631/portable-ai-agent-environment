@@ -103,5 +103,6 @@ non-Git fail-closed behavior.
 The canonical personal environment repository is private and is not published here.
 This companion contains no personal settings, secrets, backups, machine identity,
 hostnames, absolute paths, restore scripts, export scripts, or push scripts. For the
-full rationale, read [the publication boundary](docs/publication-boundary.md) and
-[case study](docs/case-study.md).
+full rationale, read [the publication boundary](docs/publication-boundary.md),
+[case study](docs/case-study.md), and the
+[portable tooling specification](docs/portable-tools-specification.md).
