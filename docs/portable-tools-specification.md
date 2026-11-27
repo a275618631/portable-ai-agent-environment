@@ -15,7 +15,7 @@ This public reference documents deterministic tool evaluation criteria, cross-pl
 | Tool | Version | License | Decision | Primary Role | Isolation / Boundary |
 | --- | --- | --- | --- | --- | --- |
 | `ast-grep` (`sg`) | `0.51.3` | MIT | **ADOPT (Secondary Structural Search)** | Syntax-aware code queries (Python, TS/JS, C#, etc.) | Standalone binary; fallback to `ripgrep` for `.vue` or unsupported SFC blocks |
-| `cisco-ai-skill-scanner` (`skill-scanner`) | `2.3.2` | Apache-2.0 | **CANDIDATE (Explicit / Offline Gate)** | Static AST, YARA, and trigger-hygiene linting for `SKILL.md` bundles | Pinned isolated venv (`--require-hashes`); offline execution only without LLM/meta APIs; non-truncated stdout when using `--fail-on-findings` |
+| `cisco-ai-skill-scanner` (`skill-scanner`) | `2.3.2` | Apache-2.0 | **ADOPT (Explicit Offline / Sandbox-Gated Gate)** | Static AST, YARA, and trigger-hygiene linting for `SKILL.md` bundles | Pinned isolated package prefix (`--no-index --require-hashes --target`) invoked with an unmodified Python runtime inside an OS network-isolated sandbox (verified blocking raw TCP/DNS, not proxy-only); disable LLM/meta APIs; preserve full stdout with `--fail-on-findings` |
 | `rtk` (`rtk-oss`) | `1.2.1` | Apache-2.0 | **REJECT DEFAULT** | Output compaction proxy | Observed stripping compiler/test warnings while returning `exit=0`; unsuitable as transparent default test/git wrapper |
 
 ## Verified Cross-Platform SHA-256 Checksums
